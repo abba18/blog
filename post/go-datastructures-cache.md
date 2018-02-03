@@ -73,7 +73,7 @@ type cached struct {
 ## 具体实现分析
 算法的实现本身主要还是依赖于标准库中的list-双向链表，不管使用的是哪种淘汰策略，若触发淘汰--也就是当内存容量不足时（调用New函数时指定的大小），就会移除链表的尾节点。因为所完成的算法类型不多，所以实现也比较简单。
 
-### 初始化-New()
+### 1.初始化-New()
 初始化的实现非常简单，指定容量，初始化链表以及数据表，同时指定默认淘汰策略。同时，也提供自定义cache初始化的函数参数， 只要传入CacheOption类型的函数即可。
 ```
 // CacheOption configures a cache.
@@ -121,7 +121,7 @@ func EvictionPolicy(policy Policy) CacheOption {
 }
 ```
 
-### 获取数据-Get()
+### 2.获取数据-Cache.Get()
 Get方法主要就是查询传入键值在数据表中是否存在，支持传入多参数，若键值存在则会记录数据的大小，否则为空值，最后以Item数组的形式返回。在查询数据存在时会调用recordAccess()来处理淘汰策略的问题，对与FIFO,recordAccess()就是cache.noop()，而LUR则是cache.record()。
 ```
 func (c *cache) Get(keys ...string) []Item {
@@ -143,7 +143,7 @@ func (c *cache) Get(keys ...string) []Item {
 }
 ```
 
-### 数据插入-Put()
+### 3.数据插入-Cache.Put()
 Put方法则是插入一个新的数据，需要传入键值以及实现Item接口的数据，在插入数据时首先会通过cache.remove()判断该键值是否存在，如果存在则会先清除该键值以及对应的数据并增加可用空间，然后调用cache.ensureCapacity()来判断当前cache的可用容量能否存入该数据，如果容量不足则会清除链表的尾节点，增加可用空间直到剩余空间能存入该数据为止，最后就是调用cache.recordAdd()以及cache.recordAccess()来处理淘汰策略，最终添加数据。
 ```
 func (c *cache) Put(key string, item Item) {
@@ -165,7 +165,7 @@ func (c *cache) Put(key string, item Item) {
 }
 ```
 
-### 数据删除-Remove()
+### 4.数据删除-Cache.Remove()
 Remove的话就很简单了，就只是将传入的数据数组逐个调用cache.remove(),就更Put方法的调用的一样。
 
 ## 总结
