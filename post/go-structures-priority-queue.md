@@ -6,11 +6,11 @@ draft: false
 本文基于项目[go-datastruct](https://github.com/Workiva/go-datastructures)中的代码进行解读，如有不足，敬请留言指教。  
 
 ## 基本介绍  
-这此讲解的是优先队列(priority_queue)，从整个接口提供和功能实现上一篇的队列(queue)差距不大，无非就是在入队时做根据规则做了一次排序。优先队列算法实现使用堆排序算法实现。由于与Queue是实现相似度高，本文会大量引用和对比Queue的实现。
+这此讲解的是优先队列(priority_queue)，从整个功能接口提供和接口实现上与上一篇的队列(queue)差距不大，无非就是在入队时做根据规则做了一次排序。优先队列算法实现使用堆排序算法实现。由于与Queue是实现相似度高，本文会大量引用和对比Queue的实现。
 
 * 注意：用本文用queue表示包模块，P_Queue表示优先队列队列实体，Queue表示队列实体。  
 
-Queue提供以下方法:  
+P_Queue提供以下方法:  
 
 * Put() -- 添加值进入队列，入队操作。
 * Get() -- 向队列阻塞获取某一个位置的值，出队操作。
@@ -58,7 +58,7 @@ type Item interface {
 	Compare(other Item) int
 }
 ```
-对于Compare()方法的返回值定义，返回1表示“调用者“比other大；返回0表示两者相等；返回-1表示调用者比other小。  
+对于Compare()方法的返回值定义，返回1表示“调用者“比other大；返回0表示两者相等；返回-1表示“调用者”比other小。  
 
 举个例子，假设有定义了一个数据结构并实现了Compare()方法
 ```
@@ -67,16 +67,16 @@ type MyInt{
     ...
 }
 
-(i MyInt)Compare(other MyInt) int {
+(i MyInt) Compare(other MyInt) int {
     ...
 }
 
 ...
-a := MyInt{
+a := MyInt {
     value : 1,
 }
 
-b := MyInt{
+b := MyInt {
     value : 2,
 }
 ...
@@ -84,7 +84,7 @@ b := MyInt{
 
 如果优先队列要实现a比b高，那么在实现Compare方法时则需要这样：
 ```
-(i MyInt)Compare(other MyInt) int {
+(i MyInt) Compare(other MyInt) int {
     ...
     if i.value > other.value {
         return -1
@@ -100,16 +100,16 @@ b := MyInt{
 ## 具体实现分析
 
 ### 1.NewPriorityQueue() - 初始化队列
-该函数实现非常简单，传入队列容量参数和是否允许元素重复参数，通过make初始化items和itemsMap，返回示例。  
+该函数实现非常简单，传入队列容量参数和是否允许元素重复参数，通过make初始化items和itemsMap，返回实例。  
 
 ### 2.P_Queue.Put() - 插入队列
 该函数传入多个Item，执行完返回错误信息。  
 
-进入该函数，首先进行参数长度检查，然后操作加锁、是否正在销毁判定。当检查完成后，会根据初始化时是否允许重复元素时做元素插入，如果不允许元素重复会使用itemsMap判断队列是否已经存在需要插入的元素，然后调用P_Queue.items.push()插入。 
+进入该函数，首先进行参数长度检查，然后操作加锁、是否正在销毁判定。当检查完成后，会跟据初始化时是否允许重复元素时做元素插入，如果不允许元素重复会使用itemsMap判断队列是否已经存在需要插入的元素，然后调用P_Queue.items.push()插入。 
 
 插入所有元素后，通过P_Queue.waiters.get()确认在P_Queue.Put()操作之前是否有P_Queue.Get()操作。如果没有返回的same为空，Put()操作完成；如果same为不空，则存在P_Queue.Get()，并通过same.ready通知P_Queue.Get()已经有元素插入，然后P_Queue.response.Wait()等待P_Queue.Get()操作完成，直到队列的数据为空或所有的P_Queue.Get()已经完成。  
 
-items的数据类型为priorityItems，实现元素的插入(push)、删除(pop)、获取(get)、位置交换(swap)，其实也是实现了golang版的堆的插入与删除，完成了对排序实现的优先队列。
+items的数据类型为priorityItems，实现元素的插入(push)、删除(pop)、获取(get)、位置交换(swap)，其实也是实现了golang版的堆的插入与删除，完成了堆排序实现的优先队列。
 ```
 type priorityItems []Item
 
@@ -182,7 +182,7 @@ func (items *priorityItems) push(item Item) {
 
 同样的，进入该函数，首先进行参数长度检查，然后操作加锁、是否正在销毁判定。当检查完成后，定义了一个匿名函数，作用就是传入队列元素切片，并删除itemsMap中的这些元素切片。  
 
-随后判断队列长度，如果长度不为0，则直接调用P_Queue.items.get()获取队列元素，然后调用匿名函数删除出队的元素。需要注意的是，如果队列长度比所需获取的长度要短，则返回却元素切片长度为队列长度，容量为所需获取的长度，所以需要用len()判断实际返回了多少元素。如果队列长度为0，则解锁队列操作，并生成一个新的same，通过P_Queue.waiters.put()传入并通过<-same.ready阻塞等待P_Queue.Put()插入数据或队列销毁和通知，当same.ready结束等待，需要先判断队列是否进入销毁状态，然后调用P_Queue.items.get()获取队列元素，最后调用sema.response.Done()通知P_Queue.Put()完成操作。
+随后判断队列长度，如果长度不为0，则直接调用P_Queue.items.get()获取队列元素，然后调用匿名函数删除出队的元素。需要注意的是，如果队列长度比所需获取的长度要短，则返回一个元素切片，长度为队列长度，容量为所需获取的长度，所以需要用len()判断实际返回了多少元素。如果队列长度为0，则解锁队列操作，并生成一个新的same，通过P_Queue.waiters.put()传入并通过<-same.ready阻塞等待P_Queue.Put()插入数据或队列销毁和通知，当same.ready结束等待，需要先判断队列是否进入销毁状态，然后调用P_Queue.items.get()获取队列元素，最后调用sema.response.Done()通知P_Queue.Put()完成操作。
 
 在使用该函数时需要注意该函数很有可能会有阻塞操作，并且没有实现超时机制。
 
