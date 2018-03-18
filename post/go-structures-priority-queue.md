@@ -1,7 +1,7 @@
 ---
 title: "Go Structures Priority Queue"
 date: 2018-02-03T22:55:20+08:00
-draft: true
+draft: false
 ---
 本文基于项目[go-datastruct](https://github.com/Workiva/go-datastructures)中的代码进行解读，如有不足，敬请留言指教。  
 
