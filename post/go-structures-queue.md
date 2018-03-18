@@ -6,7 +6,7 @@ draft: false
 本文基于项目[go-datastruct](https://github.com/Workiva/go-datastructures)中的代码进行解读，如有不足，敬请留言指教。  
 
 ## queue包介绍
-queue包从有3个部分，分别是队列、优先队列和RingBuffer的实现，这次解析的是queue。从官方的提供的测试文件来来看，queue在使用场景上还可以对标channel，相当于无锁channel的实现，性能上而且性能还不错。  
+queue包从有3个部分，分别是队列(queue)、优先队列(priority_queue)和RingBuffer的实现，这次解析的是queue。从官方的提供的测试文件来来看，queue在使用场景上还可以对标channel，相当于无锁channel的实现，而且性能还不错。  
 
 * 注意：用本文用queue表示包模块，Queue表示队列实体
 
