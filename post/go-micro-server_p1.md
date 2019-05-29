@@ -4,8 +4,6 @@ date: 2019-05-20T15:34:20+08:00
 draft: false
 ---
 
-# micro框架源码详解 Server Package篇（一）
-
 在go-micro，server包用于构建应用服务，为其他的服务请求提供接口。注意，本次解析针对release v1.1.0版本，[点击查看源码](https://github.com/micro/go-micro/tree/v1.1.0/server)。  
 
 ## Server接口定义
