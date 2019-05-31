@@ -73,10 +73,10 @@ type rpcServer struct {
 * 1.注册debug handler。
 * 2.获取传输组件（下称transport）信息，传输层开始监听。
 * 3.异步消息组件开始建立连接。
-* 4.新建goroutinue，利用transport处理接入连接，处理函数为ServeConn。
+* 4.新建goroutinue，利用transport处理接入连接，处理函数为`ServeConn`。
 * 5.新建goroutinue，根据配置做服务定时注册策略，并等待退出信号，做好退出处理。
 
-在该函数中，其他标准micro组件的功能这里不做解析，这里都是基本连接操作。这里主要关注ServeConn函数的实现，该函数（下称处理函数）为服务所有请求的处理入口。  
+在该函数中，其他标准micro组件的功能这里不做解析，这里都是基本连接操作。这里主要关注`ServeConn`函数的实现，该函数（下称处理函数）为服务所有请求的处理入口。  
 
 处理函数会不断向transport获取消息，当拿到一条完整的消息时，重新根据transport的header重新构建上下文(context)的header，并添加transport的远程地址与本地地址。  
 
